@@ -28,17 +28,27 @@ class UpdateDepthListener
      */
     public function handle(TaskEvent $event)
     {
-        $taskService = new TaskService;
-        $task = $event->getData();
+        try {
+            $taskService = new TaskService;
+            $task = $event->getData();
 
-        $taskService->adjustDepth($task->id, $task->parent_id);
+            $taskService->adjustDepth($task->id, $task->parent_id);
 
-        Log::info(
-            sprintf(
-                "UpdateChildCountListener:success => id=%s, parent_id=%s",
-                $task->id,
-                $task->parent_id
-            )
-        );
+            Log::info(
+                sprintf(
+                    "UpdateDepthListener:success => id=%s, parent_id=%s",
+                    $task->id,
+                    $task->parent_id
+                )
+            );
+        } catch (\Throwable $th) {
+            Log::info(
+                sprintf(
+                    "UpdateDepthListener:fail => id=%s, parent_id=%s",
+                    $task->id,
+                    $task->parent_id
+                )
+            );
+        }
     }
 }
