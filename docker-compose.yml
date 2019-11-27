@@ -1,0 +1,27 @@
+version: '3.1'
+
+services:
+  db:
+    image: mysql:5.7
+    ports:
+      - ${DB_PORT}
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+
+  app:
+    build: .docker/php
+    working_dir: /home/default/app
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/home/default/app
+    depends_on:
+      - db
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8081:80"
+    depends_on:
+      - db
