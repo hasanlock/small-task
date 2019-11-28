@@ -4,9 +4,11 @@ namespace App\Providers;
 
 use Illuminate\Support\Facades\Event;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use App\Events\TaskEvent;
+use App\Events\TaskAdjustDepthEvent;
+use App\Events\TaskAdjustPointEvent;
 use App\Listeners\UpdateDepthListener;
 use App\Listeners\TaskCompletionListener;
+use App\Listeners\UpdatePointListener;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -16,9 +18,12 @@ class EventServiceProvider extends ServiceProvider
      * @var array
      */
     protected $listen = [
-        TaskEvent::class => [
+        TaskAdjustDepthEvent::class => [
             UpdateDepthListener::class,
-            TaskCompletionListener::class,
+        ],
+
+        TaskAdjustPointEvent::class => [
+            UpdatePointListener::class,
         ],
     ];
 

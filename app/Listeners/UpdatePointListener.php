@@ -2,13 +2,13 @@
 
 namespace App\Listeners;
 
-use App\Events\TaskEvent;
+use App\Events\TaskAdjustPointEvent;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use App\Services\TaskService;
 use Log;
 
-class TaskCompletionListener
+class UpdatePointListener
 {
     /**
      * Create the event listener.
@@ -23,11 +23,12 @@ class TaskCompletionListener
     /**
      * Handle the event.
      *
-     * @param  TaskEvent  $event
+     * @param  TaskAdjustPointEvent  $event
      * @return void
      */
-    public function handle(TaskEvent $event)
+    public function handle(TaskAdjustPointEvent $event)
     {
+        Log::info(__METHOD__);
         /*
         try {
             $taskService = new TaskService;

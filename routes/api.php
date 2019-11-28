@@ -26,4 +26,10 @@ Route::group([
         'uses' => 'TaskController@update',
         'as' => 'task.update',
     ]);
+
+    Route::get('/task/test', [
+        'middleware' => [],
+        'uses' => 'TaskController@test',
+        'as' => 'task.test',
+    ]);
 });

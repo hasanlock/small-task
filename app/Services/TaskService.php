@@ -2,7 +2,7 @@
 namespace App\Services;
 
 use App\Services\BaseService;
-use App\Events\TaskEvent;
+use App\Events\TaskAdjustDepthEvent;
 use Validator;
 
 class TaskService extends BaseService
@@ -49,7 +49,7 @@ class TaskService extends BaseService
                 throw new \Exception("Task creation failed", 400);
             }
 
-            \Event::dispatch(new TaskEvent($task));
+            \Event::dispatch(new TaskAdjustDepthEvent($task));
 
             return $task;
         } catch (\Throwable $th) {
@@ -97,7 +97,7 @@ class TaskService extends BaseService
             }
 
             $task = $this->get($id);
-            \Event::dispatch(new TaskEvent($task));
+            \Event::dispatch(new TaskAdjustDepthEvent($task));
 
             return $task;
         } catch (\Throwable $th) {
@@ -212,7 +212,7 @@ class TaskService extends BaseService
         if ($parentId) {
             $task = $this->getTask($parentId);
             $maxDepth = (int) config('defaults.configs.max_depth');
-            
+
             if ($task->depth >= $maxDepth) {
                 throw new \Exception("Children limit exceed for given parent", 400);
             }
@@ -221,5 +221,10 @@ class TaskService extends BaseService
         }
 
         return false;
+    }
+
+    public function adjustTaskCompletion(int $id)
+    {
+        $task = $this->getTask($id);
     }
 }

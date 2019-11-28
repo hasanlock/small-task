@@ -51,7 +51,7 @@ class TaskController extends Controller
     {
         try {
             $data = $request->validated();
-            
+
             $taskService->getTask($taskId);
             $task = $taskService->updateTask($taskId, $data);
 
@@ -62,5 +62,12 @@ class TaskController extends Controller
         } catch (\Throwable $th) {
             throw $th;
         }
+    }
+
+    public function test()
+    {
+        $task = \App\Models\Task::find(2);
+        dump($task->parent);
+        dd($task->children);
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Listeners;
 
-use App\Events\TaskEvent;
+use App\Events\TaskAdjustDepthEvent;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use App\Services\TaskService;
@@ -23,10 +23,10 @@ class UpdateDepthListener
     /**
      * Handle the event.
      *
-     * @param  TaskEvent  $event
+     * @param  TaskAdjustDepthEvent  $event
      * @return void
      */
-    public function handle(TaskEvent $event)
+    public function handle(TaskAdjustDepthEvent $event)
     {
         try {
             $taskService = new TaskService;
