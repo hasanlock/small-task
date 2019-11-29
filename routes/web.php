@@ -11,8 +11,12 @@
 |
 */
 Route::group([
-    'prefix' => 'uxa/v1',
+    'prefix' => '',
     'middleware' => []
 ], function () {
-    //
+    Route::get('/task/list', [
+        'middleware' => [],
+        'uses' => 'TaskController@index',
+        'as' => 'task.index',
+    ]);
 });

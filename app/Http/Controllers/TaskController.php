@@ -14,9 +14,13 @@ class TaskController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(TaskService $taskService)
     {
-        //
+        $tasksByUser = $taskService->getParentTasksByUser();
+
+        return view('tasks', [
+            'userTaskList' => $tasksByUser,
+        ]);
     }
 
     /**
@@ -69,6 +73,6 @@ class TaskController extends Controller
         // $task = \App\Models\Task::find(1);
         // dump($task->parent);
         // dd($task->children);
-        $taskService->adjustCompletion(3);
+        // $response = $taskService->getParentTasksByUser();
     }
 }

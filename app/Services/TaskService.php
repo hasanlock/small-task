@@ -3,7 +3,7 @@ namespace App\Services;
 
 use App\Services\BaseService;
 use App\Events\TaskAdjustDepthEvent;
-use Validator;
+use Illuminate\Database\Eloquent\Collection;
 
 class TaskService extends BaseService
 {
@@ -257,6 +257,13 @@ class TaskService extends BaseService
         }
     }
 
+    /**
+     * adjustChildCompletion handles is_done manipulations
+     * for children of a task
+     *
+     * @param integer|null $id
+     * @return void
+     */
     public function adjustChildCompletion(?int $id)
     {
         if (empty($id)) {
@@ -274,6 +281,13 @@ class TaskService extends BaseService
         $this->makeDone($id);
     }
 
+    /**
+     * adjustParentCompletion handle is_done calculation
+     * for parent of a task
+     *
+     * @param integer|null $id
+     * @return void
+     */
     public function adjustParentCompletion(?int $id)
     {
         if (empty($id)) {
@@ -301,12 +315,25 @@ class TaskService extends BaseService
         }
     }
 
+    /**
+     * adjustCompletion handels overall is_done manipulation
+     * for a task
+     *
+     * @param integer $id
+     * @return void
+     */
     public function adjustCompletion(int $id)
     {
         $this->adjustChildCompletion($id);
         $this->adjustParentCompletion($id);
     }
 
+    /**
+     * makeDone make a task done
+     *
+     * @param integer $id
+     * @return void
+     */
     public function makeDone(int $id)
     {
         $task = $this->getTask($id);
@@ -314,5 +341,54 @@ class TaskService extends BaseService
             $task->is_done = 1;
             $task->save();
         }
+    }
+
+    /**
+     * getParentTasksByUser function to sort list by user_id
+     *
+     * @return Collection
+     */
+    public function getParentTasksByUser()
+    {
+        $tasks = $this->getTasksWithoutParent();
+        $userColl = new \Illuminate\Support\Collection();
+
+        foreach ($tasks as $task) {
+            $data = $userColl->pull($task->user_id);
+            $data['user_name'] = mt_rand();
+
+            if (!isset($data['points_done'])) {
+                $data['points_done'] = 0;
+            }
+            if ($task->is_done) {
+                $data['points_done'] += $task->points;
+            }
+
+            if (!isset($data['points_total'])) {
+                $data['points_total'] = 0;
+            }
+            $data['points_total'] += $task->points;
+
+            $data['task_info'][] = $task;
+
+            $userColl->put($task->user_id, $data);
+            unset($data);
+        }
+
+        return $userColl;
+    }
+
+    /**
+     * getTasksWithoutParent function to get all task
+     * who don't have parents
+     *
+     * @return Collection
+     */
+    public function getTasksWithoutParent(): Collection
+    {
+        $taskMdl = $this->getTaskModel();
+        $parentTasks = $taskMdl->whereNull('parent_id')->get();
+
+        return $parentTasks;
     }
 }
