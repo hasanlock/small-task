@@ -45,6 +45,23 @@ class UserService
     }
 
     /**
+     * findName function finds a user by id and
+     * return full name
+     *
+     * @param integer $id
+     * @return string
+     */
+    public function findName(int $id): string
+    {
+        $user = $this->find($id);
+        if (null == $user) {
+            return '';
+        } else {
+            return $user['first_name'].' '.$user['last_name'];
+        }
+    }
+
+    /**
      * check function to check email for an id given
      *
      * @param integer $id
@@ -61,7 +78,7 @@ class UserService
         return $user['email'] == $email;
     }
 
-    public function exceptionAwareCheck(int $id, string $email): bool
+    public function exceptionAwareCheck(int $id, string $email)
     {
         try {
             $return = $this->check($id, $email);

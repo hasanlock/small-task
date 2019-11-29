@@ -14,16 +14,14 @@ class TaskService extends BaseService
      * @param string $mdlCls the Task model to be used,
      *                           default is Task model
      */
-    public function __construct(
-        $jobMdlCls = "",
-        $jobStateMdlCls = ""
-    ) {
+    public function __construct($taskMdlCls = "")
+    {
         try {
-            if (empty($jobMdlCls)) {
-                $jobMdlCls = config('defaults.class.models.task');
+            if (empty($taskMdlCls)) {
+                $taskMdlCls = config('defaults.class.models.task');
             }
 
-            $model = parent::buildModel($jobMdlCls);
+            $model = parent::buildModel($taskMdlCls);
             parent::setModel($model, 'task');
         } catch (\Throwable $th) {
             throw $th;
@@ -55,10 +53,9 @@ class TaskService extends BaseService
                 throw new \Exception("Task creation failed", 500);
             }
 
-            // \Event::dispatch(new TaskAdjustDepthEvent($task));
             $this->adjustDepth($task->id, $task->parent_id);
             $this->adjustPoints($task->id);
-            $this->adjustCompletion($task->id);
+            $this->adjustCompletion($task->id, (int) $data['is_done']);
 
             return $task;
         } catch (\Throwable $th) {
@@ -111,10 +108,10 @@ class TaskService extends BaseService
             }
 
             $task = $this->get($id);
-            // \Event::dispatch(new TaskAdjustDepthEvent($task));
+
             $this->adjustDepth($task->id, $task->parent_id);
             $this->adjustPoints($task->id);
-            $this->adjustCompletion($task->id);
+            $this->adjustCompletion($task->id, (int) $data['is_done']);
 
             return $task;
         } catch (\Throwable $th) {
@@ -184,7 +181,7 @@ class TaskService extends BaseService
     /*#### supporting functions ####*/
 
     /**
-     * getTaskModel Creates and returns a blank job query object
+     * getTaskModel Creates and returns a blank task object
      *
      * @return App\Models\Task
      */
@@ -275,7 +272,7 @@ class TaskService extends BaseService
      * @param integer|null $id
      * @return void
      */
-    public function adjustChildCompletion(?int $id)
+    public function adjustChildCompletion(?int $id, int $done)
     {
         if (empty($id)) {
             return ;
@@ -283,13 +280,17 @@ class TaskService extends BaseService
 
         $task = $this->getTask($id);
 
-        if (!$task->is_done && $task->children->count() > 0) {
+        if ($task->children->count() > 0) {
             $task->children->each(function ($childTask) {
-                self::adjustCompletion($childTask->id);
+                self::adjustChildCompletion($childTask->id, $done);
             });
         }
 
-        $this->makeDone($id);
+        if ($done) {
+            $this->makeDone($id);
+        } else {
+            $this->makeUnDone($id);
+        }
     }
 
     /**
@@ -299,12 +300,12 @@ class TaskService extends BaseService
      * @param integer|null $id
      * @return void
      */
-    public function adjustParentCompletion(?int $id)
+    public function adjustParentCompletion(?int $id, int $done)
     {
         if (empty($id)) {
             return ;
         }
-        $this->makeDone($id);
+
         $task = $this->getTask($id);
 
         if (!is_null($task->parent_id)) {
@@ -322,7 +323,7 @@ class TaskService extends BaseService
             $parentTask->is_done = $parentIsDone;
             $parentTask->save();
 
-            self::adjustParentCompletion($parentTask->parent_id);
+            self::adjustParentCompletion($parentTask->parent_id, $done);
         }
     }
 
@@ -333,10 +334,10 @@ class TaskService extends BaseService
      * @param integer $id
      * @return void
      */
-    public function adjustCompletion(int $id)
+    public function adjustCompletion(int $id, int $done)
     {
-        $this->adjustChildCompletion($id);
-        $this->adjustParentCompletion($id);
+        $this->adjustChildCompletion($id, $done);
+        $this->adjustParentCompletion($id, $done);
     }
 
     /**
@@ -355,6 +356,21 @@ class TaskService extends BaseService
     }
 
     /**
+     * makeDone make a task undone
+     *
+     * @param integer $id
+     * @return void
+     */
+    public function makeUnDone(int $id)
+    {
+        $task = $this->getTask($id);
+        if ($task->is_done != 0) {
+            $task->is_done = 0;
+            $task->save();
+        }
+    }
+
+    /**
      * getParentTasksByUser function to sort list by user_id
      *
      * @return Collection
@@ -366,7 +382,7 @@ class TaskService extends BaseService
 
         foreach ($tasks as $task) {
             $data = $userColl->pull($task->user_id);
-            $data['user_name'] = mt_rand();
+            $data['user_name'] = (new UserService)->findName($task->user_id);
 
             if (!isset($data['points_done'])) {
                 $data['points_done'] = 0;
