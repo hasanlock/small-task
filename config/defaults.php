@@ -6,6 +6,7 @@ return [
         ],
     ],
     'configs' => [
-        'max_depth' => env('CHILDREN_MAX_DEPTH_LIMIT'),
+        'max_depth' => 5,
+        'user_api' => 'https://gitlab.iterato.lt/snippets/3/raw',
     ],
 ];

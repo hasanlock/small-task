@@ -67,12 +67,4 @@ class TaskController extends Controller
             throw $th;
         }
     }
-
-    public function test(TaskService $taskService)
-    {
-        // $task = \App\Models\Task::find(1);
-        // dump($task->parent);
-        // dd($task->children);
-        // $response = $taskService->getParentTasksByUser();
-    }
 }

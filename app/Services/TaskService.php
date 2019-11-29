@@ -4,6 +4,7 @@ namespace App\Services;
 use App\Services\BaseService;
 use App\Events\TaskAdjustDepthEvent;
 use Illuminate\Database\Eloquent\Collection;
+use App\Services\UserService;
 
 class TaskService extends BaseService
 {
@@ -38,6 +39,11 @@ class TaskService extends BaseService
     public function createTask($data)
     {
         try {
+            (new UserService)->exceptionAwareCheck(
+                $data['user_id'],
+                $data['email'],
+            );
+
             $model = $this->getTaskModel();
             $fillable = $this->getFillables($model);
             $entityData = $this->arrayOnly($data, $fillable);
@@ -46,7 +52,7 @@ class TaskService extends BaseService
 
             $task = $this->create($entityData);
             if (is_null($task)) {
-                throw new \Exception("Task creation failed", 400);
+                throw new \Exception("Task creation failed", 500);
             }
 
             // \Event::dispatch(new TaskAdjustDepthEvent($task));
@@ -88,6 +94,11 @@ class TaskService extends BaseService
     public function updateTask($id, $data)
     {
         try {
+            (new UserService)->exceptionAwareCheck(
+                $data['user_id'],
+                $data['email'],
+            );
+
             $model = $this->getTaskModel();
             $fillable = $this->getFillables($model);
             $entityData = $this->arrayOnly($data, $fillable);
@@ -96,7 +107,7 @@ class TaskService extends BaseService
 
             $success = $this->update($id, $entityData);
             if (!$success) {
-                throw new \Exception("Task update failed", 400);
+                throw new \Exception("Task update failed", 500);
             }
 
             $task = $this->get($id);
@@ -141,7 +152,7 @@ class TaskService extends BaseService
         try {
             $task = $this->get($id);
             if (is_null($task)) {
-                throw new \Exception("Task not found", 404);
+                throw new \Exception("Task not found", 500);
             }
 
             return $task;
@@ -220,7 +231,7 @@ class TaskService extends BaseService
             $maxDepth = (int) config('defaults.configs.max_depth');
 
             if ($task->depth >= $maxDepth) {
-                throw new \Exception("Children limit exceed for given parent", 400);
+                throw new \Exception("Children limit exceed for given parent", 500);
             }
 
             return true;

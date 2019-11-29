@@ -28,7 +28,7 @@ abstract class BaseService
         $model = app()->make($modelClass);
 
         if (!$model instanceof Model) {
-            throw new \Exception('model_not_found');
+            throw new \Exception('model_not_found', 500);
         }
 
         return $model;
@@ -55,11 +55,11 @@ abstract class BaseService
     protected function getModelOf($tag)
     {
         if (empty($tag)) {
-            throw new \Exception('required_model_tag_missing');
+            throw new \Exception('Required model tag missing', 500);
         }
 
         if (!array_key_exists($tag, $this->models)) {
-            throw new \Exception('model_not_initiated');
+            throw new \Exception('Model not initiated', 500);
         }
 
         return $this->models[$tag];
