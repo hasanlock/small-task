@@ -64,10 +64,11 @@ class TaskController extends Controller
         }
     }
 
-    public function test()
+    public function test(TaskService $taskService)
     {
-        $task = \App\Models\Task::find(2);
-        dump($task->parent);
-        dd($task->children);
+        // $task = \App\Models\Task::find(1);
+        // dump($task->parent);
+        // dd($task->children);
+        $taskService->adjustCompletion(3);
     }
 }

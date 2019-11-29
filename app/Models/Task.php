@@ -3,17 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Notifications\Notifiable;
-use App\Events\TaskAdjustPointEvent;
 
 class Task extends Model
 {
-    use Notifiable;
-
-    protected $dispatchesEvents = [
-        'created' => TaskAdjustPointEvent::class,
-    ];
-
     /**
      * The attributes that are mass assignable.
      *

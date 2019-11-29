@@ -18,13 +18,6 @@ class EventServiceProvider extends ServiceProvider
      * @var array
      */
     protected $listen = [
-        TaskAdjustDepthEvent::class => [
-            UpdateDepthListener::class,
-        ],
-
-        TaskAdjustPointEvent::class => [
-            UpdatePointListener::class,
-        ],
     ];
 
     /**

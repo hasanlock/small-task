@@ -49,7 +49,10 @@ class TaskService extends BaseService
                 throw new \Exception("Task creation failed", 400);
             }
 
-            \Event::dispatch(new TaskAdjustDepthEvent($task));
+            // \Event::dispatch(new TaskAdjustDepthEvent($task));
+            $this->adjustDepth($task->id, $task->parent_id);
+            $this->adjustPoints($task->id);
+            $this->adjustCompletion($task->id);
 
             return $task;
         } catch (\Throwable $th) {
@@ -97,7 +100,10 @@ class TaskService extends BaseService
             }
 
             $task = $this->get($id);
-            \Event::dispatch(new TaskAdjustDepthEvent($task));
+            // \Event::dispatch(new TaskAdjustDepthEvent($task));
+            $this->adjustDepth($task->id, $task->parent_id);
+            $this->adjustPoints($task->id);
+            $this->adjustCompletion($task->id);
 
             return $task;
         } catch (\Throwable $th) {
@@ -223,8 +229,90 @@ class TaskService extends BaseService
         return false;
     }
 
-    public function adjustTaskCompletion(int $id)
+    /**
+     * adjustPoints function to update point count from child to parent
+     *
+     * @param integer $id
+     * @return void
+     */
+    public function adjustPoints(int $id): void
     {
         $task = $this->getTask($id);
+
+        if ($task->children->count() > 0) {
+            $totalPoint = 0;
+
+            $task->children()->each(function ($childTask) use (&$totalPoint) {
+                $totalPoint += $childTask->points;
+            });
+
+            if ($totalPoint) {
+                $task->points = $totalPoint;
+                $task->save();
+            }
+        }
+
+        if (!is_null($task->parent_id)) {
+            self::adjustPoints($task->parent_id);
+        }
+    }
+
+    public function adjustChildCompletion(?int $id)
+    {
+        if (empty($id)) {
+            return ;
+        }
+
+        $task = $this->getTask($id);
+
+        if (!$task->is_done && $task->children->count() > 0) {
+            $task->children->each(function ($childTask) {
+                self::adjustCompletion($childTask->id);
+            });
+        }
+
+        $this->makeDone($id);
+    }
+
+    public function adjustParentCompletion(?int $id)
+    {
+        if (empty($id)) {
+            return ;
+        }
+        $this->makeDone($id);
+        $task = $this->getTask($id);
+
+        if (!is_null($task->parent_id)) {
+            $parentTask = $this->getTask($task->parent_id);
+
+
+            $taskMdl = $this->getTaskModel();
+            $siblings = $taskMdl->where('parent_id', $task->parent_id)->get();
+
+            $parentIsDone = $task->is_done;
+            $siblings->each(function ($sibling) use (&$parentIsDone, &$rpt) {
+                $parentIsDone = (int)($parentIsDone and $sibling->is_done);
+            });
+
+            $parentTask->is_done = $parentIsDone;
+            $parentTask->save();
+
+            self::adjustParentCompletion($parentTask->parent_id);
+        }
+    }
+
+    public function adjustCompletion(int $id)
+    {
+        $this->adjustChildCompletion($id);
+        $this->adjustParentCompletion($id);
+    }
+
+    public function makeDone(int $id)
+    {
+        $task = $this->getTask($id);
+        if ($task->is_done != 1) {
+            $task->is_done = 1;
+            $task->save();
+        }
     }
 }
